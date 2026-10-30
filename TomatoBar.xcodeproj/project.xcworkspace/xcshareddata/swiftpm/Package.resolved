@@ -1,0 +1,33 @@
+{
+  "originHash" : "60467d826e6e517911c51701bef6946e4641ae6c0ec3800ff91b0815c0d90c06",
+  "pins" : [
+    {
+      "identity" : "keyboardshortcuts",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sindresorhus/KeyboardShortcuts",
+      "state" : {
+        "revision" : "1aef85578fdd4f9eaeeb8d53b7b4fc31bf08fe27",
+        "version" : "2.4.0"
+      }
+    },
+    {
+      "identity" : "launchatlogin",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sindresorhus/LaunchAtLogin",
+      "state" : {
+        "revision" : "9a894d799269cb591037f9f9cb0961510d4dca81",
+        "version" : "5.0.2"
+      }
+    },
+    {
+      "identity" : "swiftstate",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ReactKit/SwiftState",
+      "state" : {
+        "branch" : "swift/5.0",
+        "revision" : "887e75b96da6be36a062e1b0ef832c32a803348b"
+      }
+    }
+  ],
+  "version" : 3
+}

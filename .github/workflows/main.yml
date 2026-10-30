@@ -1,0 +1,68 @@
+name: main
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Delete old prerelease
+        if: github.ref_type == 'branch'
+        uses: dev-drprasad/delete-tag-and-release@v1.1
+        with:
+          delete_release: true
+          tag_name: prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set version for tag
+        if: github.ref_type == 'tag'
+        run: echo "version=$(git describe --tags --match 'v*')" >> $GITHUB_ENV
+
+      - name: Set version for branch
+        if: github.ref_type == 'branch'
+        run: echo "version=$(git describe --tags)" >> $GITHUB_ENV
+
+      - name: Import signing certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.CODESIGN_CERT_BASE64 }}
+          p12-password: ${{ secrets.CODESIGN_CERT_PASSWORD }}
+
+      - name: Trust signing certificate
+        run: |
+          echo "${{ secrets.CODESIGN_CERT_PEM_BASE64 }}" | base64 -d > /tmp/ci-cert.pem
+          sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain /tmp/ci-cert.pem
+          rm /tmp/ci-cert.pem
+
+      - name: Build
+        run: |
+          BUILT_PRODUCTS_DIR=$(xcodebuild -project TomatoBar.xcodeproj -scheme TomatoBar -configuration Release -showBuildSettings | awk '/^ *BUILT_PRODUCTS_DIR = / {print $3}')
+          xcodebuild build -project TomatoBar.xcodeproj -scheme TomatoBar -configuration Release MARKETING_VERSION=${{github.ref_name}} CODE_SIGN_IDENTITY="CI Code Signing" CODE_SIGN_STYLE=Manual ONLY_ACTIVE_ARCH=NO
+          cp -r "$BUILT_PRODUCTS_DIR/TomatoBar.app" .
+          zip -r "TomatoBar-${{env.version}}.zip" "TomatoBar.app"
+
+      - name: Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: TomatoBar-${{env.version}}.zip
+
+      - name: Prerelease
+        if: github.ref_type == 'branch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: prerelease
+          prerelease: true
+          files: TomatoBar-${{env.version}}.zip
